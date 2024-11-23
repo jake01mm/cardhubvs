@@ -1,4 +1,6 @@
 const { UserProfile, User } = require('../../models');
+const fs = require('fs');
+const path = require('path');
 
 // 查看公共个人资料
 exports.getPublicProfile = async (req, res) => {
@@ -62,6 +64,48 @@ exports.updateProfile = async (req, res) => {
     await profile.update({ first_name, last_name, avatar_url, bio, birthday, location });
 
     res.json({ message: '个人资料已更新', profile });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+};
+
+exports.getAvailableAvatars = (req, res) => {
+    try {
+      const avatarDir = path.join(__dirname, '../../public/avatars');
+      const files = fs.readdirSync(avatarDir);
+  
+      // 返回头像的 URL 列表
+      const avatarUrls = files.map((file) => `/public/avatars/${file}`);
+  
+      res.json({
+        message: '预定义头像列表',
+        avatars: avatarUrls,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: '无法获取头像列表' });
+    }
+  };
+
+
+exports.updateAvatarSelection = async (req, res) => {
+  const { avatar_url } = req.body; // 前端传递的头像 URL
+
+  if (!avatar_url || !avatar_url.startsWith('/public/avatars/')) {
+    return res.status(400).json({ error: '无效的头像 URL' });
+  }
+
+  try {
+    const profile = await UserProfile.findOne({ where: { user_id: req.user.id } });
+    if (!profile) {
+      return res.status(404).json({ error: '个人资料不存在' });
+    }
+
+    profile.avatar_url = avatar_url; // 保存头像 URL
+    await profile.save();
+
+    res.json({ message: '头像已更新', avatar_url });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: '服务器错误' });

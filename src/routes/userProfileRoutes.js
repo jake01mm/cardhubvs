@@ -21,7 +21,7 @@ router.get('/private', authMiddleware, getPrivateProfile); // 如果未定义，
 router.put('/private', authMiddleware, updateProfile); // 确保 updateProfile 已定义
 
 // 获取预定义头像列表
-router.get('/available-avatars', getAvailableAvatars);
+router.get('/available-avatars', authMiddleware,getAvailableAvatars);
 
 router.put('/private/avatar-select', authMiddleware, updateAvatarSelection);
 
